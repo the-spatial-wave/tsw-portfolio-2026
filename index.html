@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSW — The Spatial Wave</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --ink: #e8e8f0;
+    --muted: rgba(255,255,255,0.6);
+    --accent: #00d9ff;
+    --accent2: #7c3aed;
+    --accent3: #d946ef;
+    --radius: 14px;
+    --space: clamp(1rem, 3vw, 2.5rem);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Manrope, Inter, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .room { position: relative; min-height: 100vh; padding: 6rem 0; }
+  .room::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 60% 50% at 10% 50%, rgba(0, 217, 255, 0.06), transparent 55%);
+    opacity: 0.8;
+    z-index: 0;
+  }
+  @keyframes drift {
+    0% { opacity: 0.6; transform: translate(0px, 0px); }
+    50% { opacity: 1; transform: translate(24px, -14px); }
+    100% { opacity: 0.6; transform: translate(-12px, 8px); }
+  }
+  .room::before { animation: drift 10s ease-in-out infinite alternate; }
+
+  .container { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 var(--space); }
+  section + section { border-top: 1px solid var(--border); }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .section-title {
+    font-size: clamp(20px, 2vw, 24px);
+    font-weight: 800;
+    margin-top: 4px;
+  }
+  .section-desc {
+    color: var(--muted);
+    max-width: 520px;
+    font-size: 14px;
+  }
+
+  .project-grid, .kpi-grid, .serv-grid {
+    display: grid;
+    gap: 12px;
+  }
+  .project-grid, .kpi-grid { grid-template-columns: 1fr; }
+  @media (min-width: 700px) {
+    .project-grid { grid-template-columns: 1fr 1fr; }
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .serv-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .project, .kpi, .serv {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(8px);
+  }
+  .project { padding: 22px 22px 18px; transition: border-color 0.2s ease, transform 0.2s ease; }
+  .project:hover { border-color: rgba(0,217,255,0.22); transform: translateY(-2px); }
+  .project + .project { margin-top: 12px; }
+
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .project-title { font-weight: 800; letter-spacing: -0.2px; }
+  .project-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .project-badge.live { color: var(--accent); border-color: rgba(0,217,255,0.25); }
+  .project-badge.price { color: var(--accent3); border-color: rgba(217,70,239,0.25); }
+  .project-desc { color: var(--muted); font-size: 13.5px; max-width: 680px; }
+  .project-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 999px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .project-result { margin-top: 10px; font-size: 13.5px; font-weight: 700; color: var(--accent2); }
+
+  .kpi { padding: 18px; text-align: center; }
+  .kpi-number { font-size: 1.8rem; font-weight: 800; color: var(--accent); }
+  .kpi-label { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+  .serv { padding: 18px 18px 14px; transition: border-color 0.2s ease; }
+  .serv:hover { border-color: rgba(124,58,237,0.35); }
+  .serv-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .serv-desc { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+  .serv-price { font-size: 12px; font-weight: 700; margin-top: 10px; color: var(--accent2); }
+
+  .cta-card {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background:
+      linear-gradient(180deg, rgba(0,217,255,0.04) 0%, transparent 30%),
+      var(--surface);
+    padding: 22px;
+  }
+  .contact-row { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; }
+
+  .nav {
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,15,0.7);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    padding: 10px var(--space);
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    z-index: 50;
+  }
+  .nav a { font-size: 12px; color: var(--muted); }
+  .nav a:hover { color: var(--ink); text-decoration: none; }
+
+  @media (max-width: 480px) {
+    .room { padding: 4.5rem 1rem; }
+  }
+
+  /* ── CTA & LINKS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 28px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .btn:hover { opacity: 0.85; transform: translateY(-1px); text-decoration: none; }
+  .btn-primary { background: var(--accent); color: #0a0a0f; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid rgba(0,217,255,0.35);
+  }
+
+  .project-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.3px;
+    text-decoration: none;
+  }
+  .project-link:hover { text-decoration: underline; }
+
+  .serv-cta {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    text-decoration: none;
+  }
+  .serv-cta:hover { text-decoration: underline; }
+
+  /* ── DEMO LIVE SECTION ── */
+  .demo-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 700px) {
+    .demo-grid { grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; }
+    .demo-card-featured { grid-row: span 2; }
+  }
+
+  .demo-card {
+    position: relative;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: var(--surface);
+    transition: border-color 0.25s ease, transform 0.25s ease;
+    text-decoration: none;
+    display: block;
+  }
+  .demo-card:hover {
+    border-color: rgba(0, 217, 255, 0.4);
+    transform: translateY(-3px);
+    text-decoration: none;
+  }
+  .demo-card-featured .demo-visual { height: 340px; }
+  .demo-card .demo-visual { height: 180px; }
+
+  .demo-visual {
+    position: relative;
+    overflow: hidden;
+    background: #0a0a0f;
+  }
+  .demo-visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 80% at 30% 60%, rgba(0,217,255,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 60% at 80% 20%, rgba(124,58,237,0.18) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 40% at 60% 90%, rgba(217,70,239,0.12) 0%, transparent 50%);
+    animation: demoPulse 6s ease-in-out infinite alternate;
+  }
+  @keyframes demoPulse {
+    0%   { opacity: 0.7; transform: scale(1) translate(0, 0); }
+    50%  { opacity: 1;   transform: scale(1.04) translate(8px, -6px); }
+    100% { opacity: 0.8; transform: scale(1.01) translate(-4px, 4px); }
+  }
+  .demo-visual-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,217,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,217,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.6;
+  }
+  .demo-live-dot {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(10,10,15,0.75);
+    border: 1px solid rgba(0,217,255,0.3);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    backdrop-filter: blur(8px);
+    z-index: 2;
+  }
+  .demo-live-dot::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .demo-card-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(10,10,15,0.75);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1px;
+    backdrop-filter: blur(8px);
+    z-index: 2;
+  }
+  .demo-open-icon {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    color: #0a0a0f;
+    font-size: 16px;
+    font-weight: 900;
+    z-index: 2;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .demo-card:hover .demo-open-icon {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Lyra avatar visual */
+  .demo-avatar-silhouette {
+    position: absolute;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 220px;
+    background: linear-gradient(180deg, rgba(0,217,255,0.15) 0%, rgba(124,58,237,0.25) 100%);
+    clip-path: polygon(35% 0%, 65% 0%, 75% 15%, 80% 50%, 70% 65%, 65% 100%, 35% 100%, 30% 65%, 20% 50%, 25% 15%);
+    filter: blur(1px);
+    opacity: 0.6;
+    z-index: 1;
+  }
+  .demo-avatar-silhouette::after {
+    content: '';
+    position: absolute;
+    top: -20px; left: 50%; transform: translateX(-50%);
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,217,255,0.4) 0%, rgba(0,217,255,0.05) 70%);
+  }
+
+  .demo-info {
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .demo-info-left {}
+  .demo-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .demo-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.2px;
+  }
+  .demo-card-featured .demo-title { font-size: 18px; }
+  .demo-arrow {
+    color: var(--accent);
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+  .demo-card:hover .demo-arrow { transform: translate(3px, -3px); }
+
+  /* ── CANVAS PREVIEWS ── */
+  .demo-visual canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: block;
+  }
+
+  /* ── ACCESSIBILITY ── */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 0;
+    background: var(--accent);
+    color: #0a0a0f;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 0 0 var(--radius) 0;
+    z-index: 1000;
+    transition: top 0.15s ease;
+  }
+  .skip-link:focus { top: 0; outline: none; }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  .contact-row a { padding: 8px 4px; }
+</style>
+</head>
+<body>
+
+<a href="#room-0" class="skip-link">Salta al contenuto principale</a>
+
+<nav class="nav">
+  <a href="#room-0">Hero</a>
+  <a href="#room-1">Progetti</a>
+  <a href="#room-demo">Demo</a>
+  <a href="#room-2">Servizi</a>
+  <a href="#room-3">Dati</a>
+  <a href="#room-4">About</a>
+  <a href="#room-5">Contatti</a>
+</nav>
+
+<main>
+
+<section id="room-0" class="room">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-label" aria-hidden="true">The Spatial Wave</div>
+        <h1 class="section-title">Where Space<em style="font-style:normal;color:var(--accent);"> Becomes</em> Interface</h1>
+      </div>
+      <p class="section-desc">Rendiamo il spatial computing comprensibile, accessibile e soprattutto vivibile.</p>
+      <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+        <a href="#room-1" class="btn btn-primary">Vedi i progetti →</a>
+        <a href="#room-5" class="btn btn-ghost">Parliamoci</a>
+      </div>
+    </div>
+    <div class="project-grid">
+      <div class="project">
+        <div class="project-header">
+          <h3 class="project-title">Esperienza, non contenuto</h3>
+          <span class="project-badge live">Spatial-First</span>
+        </div>
+        <p class="project-desc">Ogni spazio può diventare interfaccia. Progettiamo e costruiamo ambienti in cui l’informazione si attraversa, non si legge.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="room-1" class="room">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-label" aria-hidden="true">Progetti</div>
+        <h2 class="section-title">Cosa abbiamo costruito</h2>
+      </div>
+      <p class="section-desc">Una collezione di sistemi, esperienze e prodotti focalizzati sul spatial computing.</p>
+    </div>
+    <div class="project-grid">
+
+      <article class="project">
+        <div class="project-header">
+          <h3 class="project-title">LYRA Hub XR</h3>
+          <span class="project-badge live">Live</span>
+        </div>
+        <p class="project-desc">Esperienza WebXR in-browser con avatar NPC, quiz interattivo e conversione su Skool. Sistema di onboarding immersivo per il corso XR Reset.</p>
+        <div class="project-tags">
+          <span class="tag">React</span><span class="tag">R3F</span><span class="tag">Three.js</span><span class="tag">XR</span>
+        </div>
+        <div class="project-result">Risultato: onboarding conversione con profilo dinamico.</div>
+        <a href="https://xr-my-scenes.vercel.app/" target="_blank" rel="noreferrer" class="project-link" aria-label="Apri LYRA Hub XR — XR My Scenes (nuova scheda)">Apri progetto →</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <h3 class="project-title">XR Reset</h3>
+          <span class="project-badge price">Corso · €29</span>
+        </div>
+        <p class="project-desc">Programma 7 giorni: “Pubblica la tua scena XR in 4 ore”. Starter kit, video lezioni e audio in italiano.</p>
+        <div class="project-tags">
+          <span class="tag">Education</span><span class="tag">WebXR</span><span class="tag">Skool</span>
+        </div>
+        <div class="project-result">Risultato: accesso senza codice tramite parametri configurabili.</div>
+        <a href="https://xr-reset-landing.vercel.app/" target="_blank" rel="noreferrer" class="project-link" aria-label="Scopri XR Reset (nuova scheda)">Scopri il corso →</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <h3 class="project-title">TSW Command Center</h3>
+          <span class="project-badge price">Beta</span>
+        </div>
+        <p class="project-desc">Dashboard strategica AI: research, strategy, content calendar e video studio in un flusso operativo.</p>
+        <div class="project-tags">
+          <span class="tag">React 19</span><span class="tag">Insforge</span><span class="tag">Anthropic</span>
+        </div>
+        <div class="project-result">Risultato: da brief idea a pubblicazione assistita da AI.</div>
+        <a href="https://tsw-command-center.vercel.app/" target="_blank" rel="noreferrer" class="project-link" aria-label="Apri TSW Command Center (nuova scheda)">Apri dashboard →</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <h3 class="project-title">Lyra 3D Portfolio</h3>
+          <span class="project-badge live">Online</span>
+        </div>
+        <p class="project-desc">Character design, cinematic lighting, AI video pipeline. Da concept a presentazione finale.</p>
+        <div class="project-tags">
+          <span class="tag">DAZ Studio</span><span class="tag">Blender</span><span class="tag">D-ID</span>
+        </div>
+        <div class="project-result">Risultato: avatar coerenti e riconoscibili per demo e brand.</div>
+        <a href="https://xr-reset-kit-starter.vercel.app/" target="_blank" rel="noreferrer" class="project-link" aria-label="Vedi Lyra 3D Portfolio starter (nuova scheda)">Vedi il lavoro →</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <h3 class="project-title">AI Content Factory</h3>
+        </div>
+        <p class="project-desc">Kanban editoriale AI e pipeline video a 7 step per distribuzione multi-piattaforma.</p>
+        <div class="project-tags">
+          <span class="tag">Automation</span><span class="tag">Video</span><span class="tag">B2B</span>
+        </div>
+        <div class="project-result">Risultato: contenuti editoriali pronti senza boilerplate.</div>
+        <a href="mailto:edyta1480@gmail.com" class="project-link">Discutiamo il tuo flusso →</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <h3 class="project-title">Bali Design 3D</h3>
+          <span class="project-badge live">Deploy</span>
+        </div>
+        <p class="project-desc">Showcase WebXR commerce-ready per arredo d’interni. Configuratore prodotto in-browser senza app store.</p>
+        <div class="project-tags">
+          <span class="tag">Commerce</span><span class="tag">3D</span><span class="tag">WebXR</span>
+        </div>
+        <div class="project-result">Risultato: esperienza prodotto raggiungibile da link diretto.</div>
+        <a href="mailto:edyta1480@gmail.com" class="project-link">Vuoi qualcosa di simile? →</a>
+      </article>
+
+      <article class="project">
+        <div class="project-header">
+          <h3 class="project-title">Hospitality 3D</h3>
+          <span class="project-badge live">Operativo</span>
+        </div>
+        <p class="project-desc">Menu digitale interattivo e distribuzione contenuti per locali — da Bibione a Tridente.</p>
+        <div class="project-tags">
+          <span class="tag">Hospitality</span><span class="tag">Mobile</span><span class="tag">Admin Panel</span>
+        </div>
+        <div class="project-result">Risultato: aggiornamenti contenuti senza tecnici in loco.</div>
+        <a href="mailto:edyta1480@gmail.com" class="project-link">Parliamo del tuo locale →</a>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section id="room-demo" class="room">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-label" aria-hidden="true">Esperienze live</div>
+        <h2 class="section-title">Aprile una scena. Ora.</h2>
+      </div>
+      <p class="section-desc">Le esperienze TSW girano direttamente nel browser — nessuna app, nessuna installazione.</p>
+    </div>
+
+    <!-- Riga 1: featured + 2 card -->
+    <div class="demo-grid">
+
+      <!-- FEATURED: My Scenes — scena WebXR con video personale -->
+      <a href="https://xr-my-scenes.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card demo-card-featured"
+         aria-label="Apri XR My Scenes — esperienza WebXR live con avatar personale (nuova scheda)">
+        <div class="demo-visual">
+          <canvas id="cv-myscenes" aria-hidden="true"></canvas>
+          <div class="demo-live-dot">LIVE</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">WebXR · Avatar personalizzato · In-browser</div>
+            <div class="demo-title">XR My Scenes</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+      <!-- XR Reset Generator UI — scene builder tool -->
+      <a href="https://xr-reset-generator-ui.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card"
+         aria-label="Apri XR Reset Generator UI — scene builder tool (nuova scheda)">
+        <div class="demo-visual" style="height:180px;">
+          <canvas id="cv-generator" aria-hidden="true"></canvas>
+          <div class="demo-card-badge">Tool · Builder</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">Scene Builder · No-code</div>
+            <div class="demo-title">XR Reset Generator</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+      <!-- XR Reset Landing — corso -->
+      <a href="https://xr-reset-landing.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card"
+         aria-label="Scopri XR Reset — corso in 7 giorni (nuova scheda)">
+        <div class="demo-visual" style="height:180px;">
+          <canvas id="cv-landing" aria-hidden="true"></canvas>
+          <div class="demo-card-badge">Corso · €29</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">7 giorni · Prima scena WebXR</div>
+            <div class="demo-title">XR Reset — Landing</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Riga 2: preview beta -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:14px;">
+
+      <a href="https://tsw-command-center.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card"
+         aria-label="Apri TSW Command Center — dashboard AI (nuova scheda)">
+        <div class="demo-visual" style="height:140px;">
+          <canvas id="cv-command" aria-hidden="true"></canvas>
+          <div class="demo-card-badge">Beta · Dashboard</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">AI · Strategy · Content</div>
+            <div class="demo-title">TSW Command Center</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+      <a href="https://ai-video-factory-navy.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card"
+         aria-label="Apri AI Video Factory (nuova scheda)">
+        <div class="demo-visual" style="height:140px;">
+          <canvas id="cv-videofactory" aria-hidden="true"></canvas>
+          <div class="demo-card-badge">Beta · Pipeline</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">Video · Automation · AI</div>
+            <div class="demo-title">AI Video Factory</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<section id="room-2" class="room">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-label" aria-hidden="true">Servizi</div>
+        <h2 class="section-title">Cosa possiamo fare insieme</h2>
+      </div>
+      <p class="section-desc">Progetti, esperienze e percorsi formativi — con prezzo trasparente quando possibile.</p>
+    </div>
+    <div class="serv-grid">
+
+      <div class="serv">
+        <h3 class="serv-title">WebXR Experience</h3>
+        <div class="serv-desc">Configuratore 3D o esperienza brand in-browser. Pronta per mobile e visibile senza installazioni.</div>
+        <div class="serv-price">A partire da €2.800</div>
+        <a href="mailto:edyta1480@gmail.com" class="serv-cta">→ Richiedi un preventivo</a>
+      </div>
+
+      <div class="serv">
+        <h3 class="serv-title">Spatial Strategy</h3>
+        <div class="serv-desc">Percorso di adozione XR per brand: dal brief al deploy, con KPI misurabili e training.</div>
+        <div class="serv-price">A partire da €1.200</div>
+        <a href="mailto:edyta1480@gmail.com" class="serv-cta">→ Parliamo del tuo brand</a>
+      </div>
+
+      <div class="serv">
+        <h3 class="serv-title">Formazione / Corso</h3>
+        <div class="serv-desc">XR Reset: corso su misura per team o singoli. Pubblica la tua scena XR in 4 ore.</div>
+        <div class="serv-price">€29</div>
+        <a href="https://thespatialwave.art" target="_blank" rel="noreferrer" class="serv-cta" aria-label="Iscriviti a XR Reset (nuova scheda)">→ Iscriviti ora</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="room-3" class="room">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-label" aria-hidden="true">Dati</div>
+        <h2 class="section-title">Numeri tangibili</h2>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-number">10+</div>
+        <div class="kpi-label">Progetti spaziali pubblicati</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-number">€5k+</div>
+        <div class="kpi-label">Revenue da prodotti digitali</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-number">20+</div>
+        <div class="kpi-label">Video lezioni e asset XR</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="room-4" class="room">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-label" aria-hidden="true">About</div>
+        <h2 class="section-title">The Spatial Wave</h2>
+      </div>
+    </div>
+    <p style="color: var(--muted); max-width: 720px; font-size: 15px; line-height: 1.7;">
+      The Spatial Wave è il sistema operativo creativo di Edyta Labedzka. Trasforma il spatial computing in esperienze vivibili: ogni idea può essere abitata prima di essere realizzata. Il focus attivo è WebXR, avatar AI, dashboard AI e formazione su Skool.
+    </p>
+  </div>
+</section>
+
+<section id="room-5" class="room">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-label" aria-hidden="true">Contatti</div>
+        <h2 class="section-title">Collaborazioni e consulenze</h2>
+      </div>
+      <p class="section-desc">Progetti custom o partnership: solo percorsi chiari e risultati misurabili.</p>
+    </div>
+    <div class="cta-card">
+      <div class="contact-row">
+        <a href="mailto:edyta1480@gmail.com">edyta1480@gmail.com</a>
+        <a href="https://github.com/edyta14" target="_blank" rel="noreferrer" aria-label="GitHub: edyta14 (apre in nuova scheda)">GitHub: edyta14</a>
+        <a href="https://thespatialwave.art" target="_blank" rel="noreferrer" aria-label="TheSpatialWave.art (apre in nuova scheda)">TheSpatialWave.art</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container" style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div class="brand">The Spatial Wave</div>
+    <div class="legal">Edyta Labedzka · Piano privato</div>
+  </div>
+</footer>
+
+<script>
+/* ── CANVAS DEMO ANIMATIONS ── */
+
+// Utility: fit canvas to parent
+function fitCanvas(cv) {
+  cv.width  = cv.offsetWidth  || cv.parentElement.offsetWidth;
+  cv.height = cv.offsetHeight || cv.parentElement.offsetHeight;
+}
+
+/* ─────────────────────────────────────────────
+   1. XR MY SCENES — Perspective spatial grid
+   ─────────────────────────────────────────────*/
+(function() {
+  const cv = document.getElementById('cv-myscenes');
+  if (!cv) return;
+  fitCanvas(cv);
+  const ctx = cv.getContext('2d');
+  let t = 0;
+
+  // Particles
+  const particles = Array.from({length: 55}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: 1 + Math.random() * 2,
+    spd: 0.0003 + Math.random() * 0.0005,
+    phase: Math.random() * Math.PI * 2
+  }));
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#05050e');
+    bg.addColorStop(1, '#0a0a18');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Perspective floor grid
+    const vp = { x: W / 2, y: H * 0.45 };
+    const COLS = 12, ROWS = 10;
+    const speed = 0.28;
+    const offset = (t * speed) % (H / ROWS);
+
+    ctx.strokeStyle = 'rgba(0,217,255,0.12)';
+    ctx.lineWidth = 1;
+
+    // Vertical perspective lines
+    for (let c = 0; c <= COLS; c++) {
+      const xNorm = c / COLS;
+      const xBase = xNorm * W;
+      ctx.beginPath();
+      ctx.moveTo(vp.x, vp.y);
+      ctx.lineTo(xBase, H + offset);
+      ctx.stroke();
+    }
+
+    // Horizontal perspective lines
+    for (let r = 0; r <= ROWS; r++) {
+      const yNorm = r / ROWS;
+      const y = vp.y + (H + offset - vp.y) * yNorm;
+      const xLeft  = vp.x - (vp.x - 0)  * yNorm;
+      const xRight = vp.x + (W - vp.x)   * yNorm;
+      const alpha  = yNorm * 0.25;
+      ctx.strokeStyle = `rgba(0,217,255,${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(xLeft, y);
+      ctx.lineTo(xRight, y);
+      ctx.stroke();
+    }
+
+    // Central avatar glow
+    const pulse = 0.7 + 0.3 * Math.sin(t * 0.04);
+    const grd = ctx.createRadialGradient(W/2, H*0.38, 0, W/2, H*0.38, W*0.25);
+    grd.addColorStop(0,   `rgba(0,217,255,${0.22 * pulse})`);
+    grd.addColorStop(0.5, `rgba(124,58,237,${0.12 * pulse})`);
+    grd.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    // Avatar silhouette
+    const ax = W / 2, ay = H * 0.25;
+    const aSize = Math.min(W, H) * 0.18;
+    ctx.save();
+    ctx.globalAlpha = 0.45 + 0.15 * Math.sin(t * 0.03);
+    const avatarGrd = ctx.createLinearGradient(ax, ay - aSize * 1.2, ax, ay + aSize * 2);
+    avatarGrd.addColorStop(0,   'rgba(0,217,255,0.9)');
+    avatarGrd.addColorStop(0.4, 'rgba(124,58,237,0.7)');
+    avatarGrd.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = avatarGrd;
+    // Head
+    ctx.beginPath();
+    ctx.arc(ax, ay - aSize * 0.9, aSize * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    // Body
+    ctx.beginPath();
+    ctx.moveTo(ax - aSize * 0.35, ay - aSize * 0.55);
+    ctx.lineTo(ax + aSize * 0.35, ay - aSize * 0.55);
+    ctx.lineTo(ax + aSize * 0.25, ay + aSize * 1.1);
+    ctx.lineTo(ax - aSize * 0.25, ay + aSize * 1.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Floating particles
+    particles.forEach(p => {
+      p.y -= p.spd;
+      if (p.y < 0) p.y = 1;
+      const px = p.x * W;
+      const py = p.y * H;
+      const alpha = 0.4 + 0.4 * Math.sin(t * 0.02 + p.phase);
+      ctx.beginPath();
+      ctx.arc(px, py, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,217,255,${alpha})`;
+      ctx.fill();
+    });
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  window.addEventListener('resize', () => { fitCanvas(cv); });
+})();
+
+/* ─────────────────────────────────────────────
+   2. XR RESET GENERATOR — Builder UI
+   ─────────────────────────────────────────────*/
+(function() {
+  const cv = document.getElementById('cv-generator');
+  if (!cv) return;
+  fitCanvas(cv);
+  const ctx = cv.getContext('2d');
+  let t = 0;
+
+  const panels = [
+    { x: 0.04, y: 0.08, w: 0.28, h: 0.82, label: 'OBJECTS', color: 'rgba(124,58,237,0.7)' },
+    { x: 0.35, y: 0.08, w: 0.42, h: 0.82, label: 'VIEWPORT', color: 'rgba(0,217,255,0.6)' },
+    { x: 0.80, y: 0.08, w: 0.18, h: 0.82, label: 'PROPS', color: 'rgba(217,70,239,0.6)' },
+  ];
+
+  const listItems = ['Cube_001', 'Lyra_Avatar', 'Floor_Plane', 'Light_Key', 'Camera_Main'];
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // BG
+    ctx.fillStyle = '#080812';
+    ctx.fillRect(0, 0, W, H);
+
+    // Top bar
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(0, 0, W, H * 0.07);
+    ctx.fillStyle = 'rgba(0,217,255,0.6)';
+    ctx.font = `bold ${H * 0.045}px monospace`;
+    ctx.fillText('XR Scene Builder  ●', W * 0.03, H * 0.052);
+
+    // Panels
+    panels.forEach(p => {
+      const x = p.x * W, y = p.y * H, w = p.w * W, h = p.h * H;
+      // Panel bg
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 4);
+      ctx.fill();
+      // Border
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 4);
+      ctx.stroke();
+      // Label
+      ctx.fillStyle = p.color;
+      ctx.font = `bold ${H * 0.042}px monospace`;
+      ctx.fillText(p.label, x + 6, y + H * 0.055);
+    });
+
+    // Object list in left panel
+    const listX = panels[0].x * W + 6;
+    const startY = panels[0].y * H + H * 0.12;
+    const highlight = Math.floor((t / 30) % listItems.length);
+    listItems.forEach((item, i) => {
+      const ly = startY + i * (H * 0.13);
+      const isActive = i === highlight;
+      if (isActive) {
+        ctx.fillStyle = 'rgba(124,58,237,0.3)';
+        ctx.fillRect(listX - 4, ly - H * 0.04, panels[0].w * W - 8, H * 0.10);
+      }
+      ctx.fillStyle = isActive ? 'rgba(0,217,255,1)' : 'rgba(255,255,255,0.45)';
+      ctx.font = `${H * 0.038}px monospace`;
+      ctx.fillText('▸ ' + item, listX, ly);
+    });
+
+    // Viewport: 3D wireframe box
+    const vx = panels[1].x * W + panels[1].w * W * 0.5;
+    const vy = panels[1].y * H + panels[1].h * H * 0.5;
+    const boxSize = Math.min(panels[1].w * W, panels[1].h * H) * 0.28;
+    const angle = t * 0.018;
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+
+    const verts3d = [
+      [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+      [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1]
+    ].map(([x, y, z]) => {
+      // Rotate Y
+      const rx = x * cos - z * sin;
+      const rz = x * sin + z * cos;
+      // Project
+      const scale = boxSize / (3 + rz * 0.5);
+      return [vx + rx * scale, vy + y * scale];
+    });
+
+    const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+    ctx.strokeStyle = 'rgba(0,217,255,0.7)';
+    ctx.lineWidth = 1.5;
+    edges.forEach(([a, b]) => {
+      ctx.beginPath();
+      ctx.moveTo(verts3d[a][0], verts3d[a][1]);
+      ctx.lineTo(verts3d[b][0], verts3d[b][1]);
+      ctx.stroke();
+    });
+
+    // Cursor blinking in props panel
+    const cursorVisible = Math.floor(t / 18) % 2 === 0;
+    if (cursorVisible) {
+      ctx.fillStyle = 'rgba(217,70,239,0.9)';
+      ctx.fillRect(panels[2].x * W + 8, panels[2].y * H + H * 0.18, W * 0.10, H * 0.02);
+    }
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize', () => { fitCanvas(cv); });
+})();
+
+/* ─────────────────────────────────────────────
+   3. XR RESET LANDING — 7-day course progress
+   ─────────────────────────────────────────────*/
+(function() {
+  const cv = document.getElementById('cv-landing');
+  if (!cv) return;
+  fitCanvas(cv);
+  const ctx = cv.getContext('2d');
+  let t = 0;
+  const days = ['Setup','Scene','Oggetti','Luci','Avatar','Mobile','Deploy'];
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.fillStyle = '#06060f';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = 'rgba(0,217,255,0.9)';
+    ctx.font = `bold ${H * 0.1}px -apple-system, sans-serif`;
+    ctx.fillText('XR Reset', W * 0.06, H * 0.18);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = `${H * 0.072}px -apple-system, sans-serif`;
+    ctx.fillText('7 giorni · prima scena WebXR', W * 0.06, H * 0.32);
+
+    // 7 day blocks
+    const blockW = (W - W * 0.12) / 7 - 4;
+    const blockH = H * 0.28;
+    const blockY = H * 0.50;
+    const activeDay = Math.floor((t / 60) % 8);
+
+    days.forEach((label, i) => {
+      const bx = W * 0.06 + i * (blockW + 4);
+      const isDone   = i < activeDay;
+      const isActive = i === activeDay;
+
+      // Block
+      ctx.fillStyle = isDone
+        ? 'rgba(0,217,255,0.25)'
+        : isActive
+          ? 'rgba(0,217,255,0.12)'
+          : 'rgba(255,255,255,0.04)';
+      ctx.beginPath();
+      ctx.roundRect(bx, blockY, blockW, blockH, 4);
+      ctx.fill();
+
+      ctx.strokeStyle = isDone
+        ? 'rgba(0,217,255,0.8)'
+        : isActive
+          ? 'rgba(0,217,255,0.5)'
+          : 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(bx, blockY, blockW, blockH, 4);
+      ctx.stroke();
+
+      // Day number
+      ctx.fillStyle = isDone || isActive ? 'rgba(0,217,255,1)' : 'rgba(255,255,255,0.25)';
+      ctx.font = `bold ${blockW * 0.42}px -apple-system, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(i + 1, bx + blockW / 2, blockY + blockH * 0.52);
+
+      // Checkmark for done
+      if (isDone) {
+        ctx.fillStyle = 'rgba(0,217,255,0.9)';
+        ctx.font = `${blockW * 0.3}px sans-serif`;
+        ctx.fillText('✓', bx + blockW / 2, blockY + blockH * 0.88);
+      }
+      ctx.textAlign = 'left';
+    });
+
+    // Progress bar
+    const prog = Math.min(activeDay / 7, 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.beginPath(); ctx.roundRect(W * 0.06, H * 0.86, W * 0.88, H * 0.04, 4); ctx.fill();
+    ctx.fillStyle = 'rgba(0,217,255,0.9)';
+    ctx.beginPath(); ctx.roundRect(W * 0.06, H * 0.86, W * 0.88 * prog, H * 0.04, 4); ctx.fill();
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize', () => { fitCanvas(cv); });
+})();
+
+/* ─────────────────────────────────────────────
+   4. TSW COMMAND CENTER — Dashboard AI
+   ─────────────────────────────────────────────*/
+(function() {
+  const cv = document.getElementById('cv-command');
+  if (!cv) return;
+  fitCanvas(cv);
+  const ctx = cv.getContext('2d');
+  let t = 0;
+
+  // Fake chart data
+  const chartPts = Array.from({length: 20}, (_, i) =>
+    0.3 + 0.5 * Math.sin(i * 0.7) + Math.random() * 0.2
+  );
+
+  const metrics = [
+    { label: 'Views',    val: 12480, color: '#00d9ff' },
+    { label: 'Leads',    val: 347,   color: '#7c3aed' },
+    { label: 'Revenue',  val: 5200,  color: '#d946ef' },
+  ];
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.fillStyle = '#080812';
+    ctx.fillRect(0, 0, W, H);
+
+    // Top bar
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(0, 0, W, H * 0.15);
+    ctx.fillStyle = 'rgba(124,58,237,0.9)';
+    ctx.font = `bold ${H * 0.1}px monospace`;
+    ctx.fillText('TSW Command Center', W * 0.03, H * 0.115);
+
+    // Metric cards
+    const cardW = W * 0.28, cardH = H * 0.32, cardY = H * 0.20;
+    metrics.forEach((m, i) => {
+      const cx = W * 0.03 + i * (cardW + W * 0.02);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.beginPath(); ctx.roundRect(cx, cardY, cardW, cardH, 4); ctx.fill();
+      ctx.strokeStyle = m.color.replace(')', ',0.4)').replace('rgb', 'rgba');
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect(cx, cardY, cardW, cardH, 4); ctx.stroke();
+
+      ctx.fillStyle = m.color;
+      ctx.font = `bold ${cardH * 0.38}px monospace`;
+      // Animate value counting up
+      const displayVal = Math.floor(m.val * Math.min((t / 80), 1));
+      ctx.fillText(
+        displayVal >= 1000 ? (displayVal / 1000).toFixed(1) + 'k' : displayVal,
+        cx + 8, cardY + cardH * 0.62
+      );
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = `${cardH * 0.22}px monospace`;
+      ctx.fillText(m.label, cx + 8, cardY + cardH * 0.90);
+    });
+
+    // Line chart
+    const chartX = W * 0.03, chartY = H * 0.60, chartW = W * 0.94, chartH = H * 0.33;
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    ctx.beginPath(); ctx.roundRect(chartX, chartY, chartW, chartH, 4); ctx.fill();
+
+    const animatedPts = Math.min(Math.floor(t / 5) + 2, chartPts.length);
+    if (animatedPts > 1) {
+      const grad = ctx.createLinearGradient(0, chartY, 0, chartY + chartH);
+      grad.addColorStop(0,   'rgba(0,217,255,0.3)');
+      grad.addColorStop(1,   'rgba(0,217,255,0)');
+
+      ctx.beginPath();
+      ctx.moveTo(chartX, chartY + chartH);
+      for (let i = 0; i < animatedPts; i++) {
+        const px = chartX + (i / (chartPts.length - 1)) * chartW;
+        const py = chartY + chartH * (1 - chartPts[i]);
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      const lastPx = chartX + ((animatedPts - 1) / (chartPts.length - 1)) * chartW;
+      ctx.lineTo(lastPx, chartY + chartH);
+      ctx.lineTo(chartX, chartY + chartH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.beginPath();
+      for (let i = 0; i < animatedPts; i++) {
+        const px = chartX + (i / (chartPts.length - 1)) * chartW;
+        const py = chartY + chartH * (1 - chartPts[i]);
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = 'rgba(0,217,255,0.9)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize', () => { fitCanvas(cv); });
+})();
+
+/* ─────────────────────────────────────────────
+   5. AI VIDEO FACTORY — Pipeline / filmstrip
+   ─────────────────────────────────────────────*/
+(function() {
+  const cv = document.getElementById('cv-videofactory');
+  if (!cv) return;
+  fitCanvas(cv);
+  const ctx = cv.getContext('2d');
+  let t = 0;
+
+  const steps = ['Script','Voice','Avatar','Render','Export'];
+  const stepColors = ['#00d9ff','#7c3aed','#d946ef','#7c3aed','#00d9ff'];
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.fillStyle = '#06060f';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = 'rgba(217,70,239,0.9)';
+    ctx.font = `bold ${H * 0.12}px monospace`;
+    ctx.fillText('AI Video Factory', W * 0.04, H * 0.20);
+
+    // Pipeline steps
+    const activeStep = Math.floor((t / 45) % steps.length);
+    const stepW = (W * 0.92) / steps.length;
+    const stepH = H * 0.28;
+    const stepY = H * 0.30;
+
+    steps.forEach((label, i) => {
+      const sx = W * 0.04 + i * stepW;
+      const isActive = i === activeStep;
+      const isDone   = i < activeStep;
+
+      ctx.fillStyle = isDone
+        ? 'rgba(217,70,239,0.2)'
+        : isActive
+          ? 'rgba(217,70,239,0.12)'
+          : 'rgba(255,255,255,0.03)';
+      ctx.beginPath(); ctx.roundRect(sx + 2, stepY, stepW - 4, stepH, 4); ctx.fill();
+
+      ctx.strokeStyle = isDone || isActive ? stepColors[i] : 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect(sx + 2, stepY, stepW - 4, stepH, 4); ctx.stroke();
+
+      ctx.fillStyle = isDone || isActive ? stepColors[i] : 'rgba(255,255,255,0.25)';
+      ctx.font = `${H * 0.075}px -apple-system, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(isDone ? '✓' : (i + 1), sx + stepW / 2, stepY + stepH * 0.48);
+      ctx.font = `${H * 0.055}px -apple-system, sans-serif`;
+      ctx.fillStyle = isDone || isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)';
+      ctx.fillText(label, sx + stepW / 2, stepY + stepH * 0.82);
+      ctx.textAlign = 'left';
+
+      // Arrow connector
+      if (i < steps.length - 1) {
+        ctx.fillStyle = isDone ? 'rgba(217,70,239,0.7)' : 'rgba(255,255,255,0.12)';
+        ctx.font = `${H * 0.07}px sans-serif`;
+        ctx.fillText('›', sx + stepW - 4, stepY + stepH * 0.6);
+      }
+    });
+
+    // Progress bar + ETA
+    const prog = (activeStep + 1) / steps.length;
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.beginPath(); ctx.roundRect(W * 0.04, H * 0.68, W * 0.92, H * 0.05, 4); ctx.fill();
+    const barGrd = ctx.createLinearGradient(W * 0.04, 0, W * 0.96, 0);
+    barGrd.addColorStop(0,   '#00d9ff');
+    barGrd.addColorStop(1,   '#d946ef');
+    ctx.fillStyle = barGrd;
+    ctx.beginPath(); ctx.roundRect(W * 0.04, H * 0.68, W * 0.92 * prog, H * 0.05, 4); ctx.fill();
+
+    // Output label
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = `${H * 0.07}px monospace`;
+    ctx.fillText(`Output: output_${String(Math.floor(t/45) + 1).padStart(3,'0')}.mp4`, W * 0.04, H * 0.88);
+
+    // Blinking cursor
+    if (Math.floor(t / 20) % 2 === 0) {
+      ctx.fillStyle = 'rgba(0,217,255,0.9)';
+      ctx.fillRect(W * 0.04 + W * 0.92 * prog + 4, H * 0.66, 2, H * 0.09);
+    }
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize', () => { fitCanvas(cv); });
+})();
+</script>
+</body>
+</html>
