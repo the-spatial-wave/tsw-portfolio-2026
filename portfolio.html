@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSW — The Spatial Wave</title>
+<style>
+  /* ── DESIGN SYSTEM ── */
+  :root {
+    --bg:      #050508;
+    --bg2:     #080810;
+    --surface: rgba(255,255,255,0.035);
+    --border:  rgba(255,255,255,0.07);
+    --ink:     #eeeef8;
+    --muted:   rgba(255,255,255,0.48);
+    --accent:  #00d9ff;
+    --accent2: #7c3aed;
+    --accent3: #d946ef;
+    --radius:  12px;
+    --space:   clamp(1.5rem, 4vw, 3.5rem);
+    --nav-h:   52px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── NAV ── */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    background: rgba(5,5,8,0.82);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space);
+    z-index: 100;
+  }
+  .nav-brand {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .nav-brand span { color: var(--accent); }
+  .nav-links {
+    display: flex;
+    gap: clamp(12px, 2vw, 28px);
+    align-items: center;
+  }
+  .nav-links a {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: var(--muted);
+    transition: color 0.15s;
+    text-decoration: none;
+  }
+  .nav-links a:hover { color: var(--ink); text-decoration: none; }
+
+  /* ── LAYOUT ── */
+  .room {
+    position: relative;
+    padding: clamp(6rem, 10vw, 10rem) 0;
+    overflow: hidden;
+  }
+  #room-0 { min-height: 100vh; display: flex; align-items: center; padding-top: calc(var(--nav-h) + 4rem); }
+
+  .room::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 55% 45% at 8% 50%, rgba(0,217,255,0.055) 0%, transparent 60%);
+    z-index: 0;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(30px,-18px) scale(1.06); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--space);
+  }
+
+  section + section { border-top: 1px solid var(--border); }
+
+  /* ── TYPOGRAPHY SCALE ── */
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px; height: 1px;
+    background: var(--accent);
+    opacity: 0.7;
+  }
+
+  .section-title {
+    font-size: clamp(36px, 5.5vw, 62px);
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1.0;
+    color: var(--ink);
+  }
+  #room-0 .section-title {
+    font-size: clamp(52px, 9vw, 96px);
+    letter-spacing: -3px;
+    line-height: 0.96;
+    max-width: 900px;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    font-size: clamp(15px, 1.6vw, 18px);
+    max-width: 520px;
+    line-height: 1.65;
+    margin-top: 16px;
+  }
+
+  .section-head {
+    margin-bottom: clamp(36px, 5vw, 60px);
+  }
+  .section-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: clamp(36px, 5vw, 60px);
+  }
+
+  /* ── HERO ── */
+  .hero-content { max-width: 900px; }
+  .hero-sub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-top: clamp(28px, 4vw, 48px);
+  }
+  .hero-meta {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    padding-left: 16px;
+    border-left: 1px solid var(--border);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.1px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-2px); text-decoration: none; }
+  .btn-primary {
+    background: var(--accent);
+    color: #050508;
+    box-shadow: 0 0 28px rgba(0,217,255,0.25);
+  }
+  .btn-primary:hover { box-shadow: 0 0 40px rgba(0,217,255,0.4); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.04); }
+
+  /* ── PROJECTS ── */
+  .project-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  @media (min-width: 700px) {
+    .project-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .project {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: clamp(20px, 3vw, 32px);
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .project:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+  .project:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
+  @media (min-width: 700px) {
+    .project:first-child  { border-radius: var(--radius) 0 0 0; }
+    .project:last-child   { border-radius: 0 0 var(--radius) 0; }
+    .project:nth-child(2) { border-radius: 0 var(--radius) 0 0; }
+    .project:nth-last-child(2) { border-radius: 0 0 0 var(--radius); }
+  }
+  .project:hover {
+    background: rgba(255,255,255,0.055);
+    border-color: rgba(0,217,255,0.18);
+    transform: translateY(-1px);
+  }
+  .project + .project { margin-top: 0; }
+
+  /* Project number */
+  .project::before {
+    content: attr(data-num);
+    position: absolute;
+    top: clamp(18px, 2.5vw, 28px);
+    right: clamp(18px, 2.5vw, 28px);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.12);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .project-title {
+    font-size: clamp(16px, 1.6vw, 20px);
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .project-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .project-badge.live  { color: var(--accent);  border-color: rgba(0,217,255,0.3); }
+  .project-badge.price { color: var(--accent3); border-color: rgba(217,70,239,0.3); }
+
+  .project-desc { color: var(--muted); font-size: 14px; max-width: 680px; line-height: 1.6; }
+  .project-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  .project-result {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent2);
+    line-height: 1.4;
+  }
+  .project-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--accent);
+    text-decoration: none;
+    transition: gap 0.15s ease;
+  }
+  .project-link:hover { gap: 9px; text-decoration: none; }
+
+  /* ── KPI ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  @media (min-width: 600px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .kpi {
+    padding: clamp(28px, 4vw, 48px) clamp(20px, 3vw, 36px);
+    background: var(--surface);
+    text-align: left;
+    border-right: 1px solid var(--border);
+  }
+  .kpi:last-child { border-right: none; }
+  .kpi-number {
+    font-size: clamp(44px, 6vw, 72px);
+    font-weight: 900;
+    letter-spacing: -3px;
+    line-height: 1;
+    color: var(--ink);
+    display: block;
+  }
+  .kpi-number em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .kpi-label {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 10px;
+    font-weight: 500;
+    display: block;
+  }
+
+  /* ── SERVICES ── */
+  .serv-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  @media (min-width: 700px) { .serv-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .serv {
+    border: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface);
+    padding: clamp(24px, 3vw, 40px);
+    transition: background 0.25s ease, border-color 0.25s ease;
+    position: relative;
+  }
+  .serv:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .serv:last-child  { border-radius: 0 var(--radius) var(--radius) 0; }
+  @media (max-width: 699px) {
+    .serv:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .serv:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
+  }
+  .serv:hover { background: rgba(255,255,255,0.055); border-color: rgba(124,58,237,0.3); }
+
+  .serv-title {
+    font-size: clamp(18px, 2vw, 22px);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    color: var(--ink);
+  }
+  .serv-desc { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .serv-price {
+    font-size: clamp(22px, 2.5vw, 30px);
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin-top: 20px;
+    color: var(--ink);
+    display: block;
+  }
+  .serv-price em {
+    font-style: normal;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--muted);
+    margin-left: 4px;
+  }
+  .serv-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    text-decoration: none;
+    transition: gap 0.15s ease;
+  }
+  .serv-cta:hover { gap: 9px; text-decoration: none; }
+
+  /* ── CONTACT ── */
+  .cta-card {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(0,217,255,0.04) 0%, rgba(124,58,237,0.04) 100%), var(--surface);
+    padding: clamp(28px, 4vw, 56px);
+  }
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 24px;
+    align-items: center;
+    margin-top: 24px;
+  }
+  .contact-row a {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    padding: 10px 6px;
+    opacity: 0.75;
+    transition: opacity 0.15s ease;
+  }
+  .contact-row a:hover { opacity: 1; text-decoration: none; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: clamp(24px, 3vw, 40px) var(--space);
+  }
+  footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.2px;
+  }
+  .brand span { color: var(--accent); }
+  .legal { font-size: 12px; color: var(--muted); }
+
+  /* ── DIFFERENZIATORI ── */
+  .edge-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  @media (min-width: 600px) { .edge-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 900px) { .edge-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .edge-item {
+    padding: clamp(20px, 3vw, 32px);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: relative;
+    transition: background 0.2s ease;
+  }
+  .edge-item:last-child { border-right: none; }
+  .edge-item:hover { background: rgba(255,255,255,0.055); }
+  .edge-item::before {
+    content: '';
+    display: block;
+    width: 28px; height: 2px;
+    background: var(--accent);
+    margin-bottom: 18px;
+    border-radius: 2px;
+  }
+  .edge-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .edge-desc {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .edge-tag {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0.7;
+  }
+
+  /* ── PIPELINE ── */
+  .pipeline-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-top: clamp(28px, 4vw, 44px);
+  }
+  .pipe-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: border-color 0.2s ease;
+    white-space: nowrap;
+  }
+  .pipe-step:hover { border-color: rgba(0,217,255,0.3); }
+  .pipe-step-num {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--accent);
+    opacity: 0.6;
+  }
+  .pipe-step-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .pipe-step-tool {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .pipe-arrow {
+    color: var(--border);
+    font-size: 18px;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+  .pipe-result {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 10px 16px;
+    border: 1px solid rgba(0,217,255,0.15);
+    border-radius: var(--radius);
+    background: rgba(0,217,255,0.04);
+    display: inline-block;
+  }
+  .pipe-result strong { color: var(--accent); font-weight: 700; }
+
+  /* ── STACK BADGES ── */
+  .stack-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .stack-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: var(--surface);
+  }
+  .stack-badge.hi { color: var(--accent); border-color: rgba(0,217,255,0.25); }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.10s; }
+  .reveal-delay-2 { transition-delay: 0.20s; }
+  .reveal-delay-3 { transition-delay: 0.30s; }
+  .reveal-delay-4 { transition-delay: 0.40s; }
+  .reveal-delay-5 { transition-delay: 0.50s; }
+  .reveal-delay-6 { transition-delay: 0.60s; }
+
+  /* ── DEMO LIVE SECTION ── */
+  .demo-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 700px) {
+    .demo-grid { grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; }
+    .demo-card-featured { grid-row: span 2; }
+  }
+
+  .demo-card {
+    position: relative;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: var(--surface);
+    transition: border-color 0.25s ease, transform 0.25s ease;
+    text-decoration: none;
+    display: block;
+  }
+  .demo-card:hover { border-color: rgba(0,217,255,0.35); transform: translateY(-3px); text-decoration: none; }
+  .demo-card-featured .demo-visual { height: 360px; }
+  .demo-card .demo-visual { height: 190px; }
+
+  .demo-visual {
+    position: relative;
+    overflow: hidden;
+    background: #050508;
+  }
+  .demo-visual::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 80% at 30% 60%, rgba(0,217,255,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 60% at 80% 20%, rgba(124,58,237,0.12) 0%, transparent 50%);
+    animation: demoPulse 7s ease-in-out infinite alternate;
+    z-index: 0;
+  }
+  @keyframes demoPulse {
+    0%   { opacity: 0.6; transform: scale(1)    translate(0,0);     }
+    50%  { opacity: 1;   transform: scale(1.04) translate(8px,-6px); }
+    100% { opacity: 0.7; transform: scale(1.01) translate(-4px,4px); }
+  }
+
+  .demo-live-dot {
+    position: absolute; top: 14px; left: 14px;
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(5,5,8,0.8);
+    border: 1px solid rgba(0,217,255,0.35);
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--accent);
+    backdrop-filter: blur(8px);
+    z-index: 3;
+  }
+  .demo-live-dot::before {
+    content: '';
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  .demo-card-badge {
+    position: absolute; top: 14px; left: 14px;
+    background: rgba(5,5,8,0.8); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 11px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); backdrop-filter: blur(8px); z-index: 3;
+  }
+  .demo-open-icon {
+    position: absolute; bottom: 14px; right: 14px;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    color: #050508; font-size: 16px; font-weight: 900;
+    z-index: 3; opacity: 0; transform: scale(0.7);
+    transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .demo-card:hover .demo-open-icon { opacity: 1; transform: scale(1); }
+
+  .demo-info {
+    padding: 18px 20px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.02);
+  }
+  .demo-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 5px;
+  }
+  .demo-title {
+    font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.3px;
+  }
+  .demo-card-featured .demo-title { font-size: 20px; }
+  .demo-arrow {
+    color: var(--accent); font-size: 20px; font-weight: 700; flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+  .demo-card:hover .demo-arrow { transform: translate(4px,-4px); }
+
+  /* Lyra silhouette */
+  .demo-avatar-silhouette {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 240px;
+    background: linear-gradient(180deg, rgba(0,217,255,0.14) 0%, rgba(124,58,237,0.22) 100%);
+    clip-path: polygon(35% 0%,65% 0%,75% 15%,80% 50%,70% 65%,65% 100%,35% 100%,30% 65%,20% 50%,25% 15%);
+    filter: blur(1.5px); opacity: 0.55; z-index: 1;
+  }
+
+  /* ── CANVAS PREVIEWS ── */
+  .demo-visual canvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 2; display: block;
+  }
+
+  /* ── ACCESSIBILITY ── */
+  .skip-link {
+    position: absolute; top: -100px; left: 0;
+    background: var(--accent); color: #050508;
+    font-size: 13px; font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 0 0 var(--radius) 0;
+    z-index: 1000;
+    transition: top 0.15s ease;
+  }
+  .skip-link:focus { top: 0; outline: none; }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  .contact-row a { padding: 10px 6px; }
+</style>
+</head>
+<body>
+
+<a href="#room-0" class="skip-link">Salta al contenuto principale</a>
+
+<nav class="nav">
+  <a href="#room-0" class="nav-brand">tsw<span>.</span></a>
+  <div class="nav-links">
+    <a href="#room-1">Progetti</a>
+    <a href="#room-demo">Demo</a>
+    <a href="#room-2">Servizi</a>
+    <a href="#room-3">Dati</a>
+    <a href="#room-4">About</a>
+    <a href="#room-5">Contatti</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="room-0" class="room">
+  <div class="container">
+    <div class="hero-content">
+      <div class="section-label reveal" aria-hidden="true">The Spatial Wave</div>
+      <h1 class="section-title reveal reveal-delay-1">Where Space<em style="font-style:normal;color:var(--accent);"> Becomes</em><br>Interface</h1>
+      <p class="section-desc reveal reveal-delay-2">L'unico studio italiano che combina WebXR browser-native, avatar AI proprietario e formazione tecnica in italiano — senza Unity, senza app store, senza team enterprise.</p>
+      <div class="hero-sub reveal reveal-delay-3">
+        <a href="https://xr-reset-landing.vercel.app/" target="_blank" rel="noreferrer" class="btn btn-primary">Prova XR Reset — €29 →</a>
+        <a href="#room-demo" class="btn btn-ghost">Apri una scena live</a>
+        <span class="hero-meta">React 19 · R3F · Claude API · DAZ G9 · Rokoko</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="room-edge" class="room" style="padding: clamp(3rem,5vw,5rem) 0;">
+  <div class="container">
+    <div class="edge-grid">
+      <div class="edge-item reveal reveal-delay-1">
+        <span class="edge-title">WebXR browser-native</span>
+        <span class="edge-desc">Zero app store. Il link è il prodotto — gira nel browser di chiunque, da mobile a Vision Pro.</span>
+        <span class="edge-tag">vs Unity / Unreal</span>
+      </div>
+      <div class="edge-item reveal reveal-delay-2">
+        <span class="edge-title">Avatar AI proprietario</span>
+        <span class="edge-desc">Lyra — rigging DAZ G9, Rokoko motion capture, ElevenLabs TTS. Non un template: un asset scalabile.</span>
+        <span class="edge-tag">vs D-ID generico</span>
+      </div>
+      <div class="edge-item reveal reveal-delay-3">
+        <span class="edge-title">Pipeline AI a costo marginale zero</span>
+        <span class="edge-desc">NotebookLM → script Lyra → ElevenLabs → D-ID → publish. 12+ artefatti per run. Margine reale.</span>
+        <span class="edge-tag">vs produzione manuale</span>
+      </div>
+      <div class="edge-item reveal reveal-delay-4">
+        <span class="edge-title">Unico in Italia</span>
+        <span class="edge-desc">Nessun competitor italiano combina XR + avatar AI + formazione in italiano + prezzi trasparenti.</span>
+        <span class="edge-tag">Mercato non presidiato</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="room-1" class="room">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label" aria-hidden="true">Ecosistema</div>
+      <h2 class="section-title">Cosa ho<br>costruito</h2>
+      <p class="section-desc">Sistemi, esperienze e prodotti WebXR — da Meta Horizon Worlds al browser nativo, senza interruzioni.</p>
+    </div>
+    <div class="project-grid">
+
+      <article class="project reveal reveal-delay-1" data-num="001">
+        <div class="project-header">
+          <h3 class="project-title">LYRA Hub XR</h3>
+          <span class="project-badge live">Live</span>
+        </div>
+        <p class="project-desc">Esperienza WebXR con avatar Lyra come guida NPC, quiz a 5 domande e 3 profili di uscita (Navigator / Architect / Alchemist). Funnel: Social → scena XR → email capture → XR Reset.</p>
+        <div class="project-tags">
+          <span class="tag">React 19</span><span class="tag">R3F</span><span class="tag">Three.js</span><span class="tag">DAZ G9</span>
+        </div>
+        <div class="project-result">Risultato: onboarding immersivo con profilo dinamico e conversione diretta sul corso.</div>
+        <a href="https://xr-my-scenes.vercel.app/" target="_blank" rel="noreferrer" class="project-link" aria-label="Apri LYRA Hub XR — XR My Scenes (nuova scheda)">Apri progetto →</a>
+      </article>
+
+      <article class=”project reveal reveal-delay-2” data-num=”002”>
+        <div class=”project-header”>
+          <h3 class=”project-title”>XR Reset</h3>
+          <span class=”project-badge price”>Live · €29</span>
+        </div>
+        <p class=”project-desc”>Proof-of-concept del modello SaaS: corso 7 giorni, pubblica la tua scena XR in 4 ore. 20+ video in italiano, ElevenLabs TTS, starter kit GitHub. Distribuzione Skool — prime vendite attive.</p>
+        <div class=”project-tags”>
+          <span class=”tag”>Education</span><span class=”tag”>WebXR</span><span class=”tag”>ElevenLabs</span><span class=”tag”>Skool</span>
+        </div>
+        <div class=”project-result”>Modello validato: prodotto digitale ad alto margine, distribuzione asincrona, zero costi di delivery.</div>
+        <a href=”https://xr-reset-landing.vercel.app/” target=”_blank” rel=”noreferrer” class=”project-link” aria-label=”Scopri XR Reset (nuova scheda)”>Scopri il corso →</a>
+      </article>
+
+      <article class="project reveal reveal-delay-3" data-num="003">
+        <div class="project-header">
+          <h3 class="project-title">TSW Command Center</h3>
+          <span class="project-badge price">Beta</span>
+        </div>
+        <p class="project-desc">Cockpit operativo AI-powered: Research Lab → Strategy Builder → Content Calendar → Kanban → Video Studio. Backend Insforge, AI via Claude API + Gemini 2.5 Flash.</p>
+        <div class="project-tags">
+          <span class="tag">React 19</span><span class="tag">Insforge</span><span class="tag">Claude API</span><span class="tag">Gemini</span>
+        </div>
+        <div class="project-result">Risultato: dal brief alla pubblicazione multi-piattaforma in un unico flusso.</div>
+        <a href="https://tsw-command-center.vercel.app/" target="_blank" rel="noreferrer" class="project-link" aria-label="Apri TSW Command Center (nuova scheda)">Apri dashboard →</a>
+      </article>
+
+      <article class="project reveal reveal-delay-4" data-num="004">
+        <div class="project-header">
+          <h3 class="project-title">Lyra — Avatar AI</h3>
+          <span class="project-badge live">Core System</span>
+        </div>
+        <p class="project-desc">Lyra è la guida NPC e co-pilota strategico di TSW. Character design DAZ G9, rigging Blender, motion capture Rokoko, video pipeline D-ID. Appare in tutte le esperienze XR come interfaccia vivente.</p>
+        <div class="project-tags">
+          <span class="tag">DAZ Studio G9</span><span class="tag">Blender</span><span class="tag">Rokoko</span><span class="tag">D-ID</span>
+        </div>
+        <div class="project-result">Risultato: identità visiva coerente e riconoscibile in ogni touchpoint XR.</div>
+        <a href="https://xr-reset-kit-starter.vercel.app/" target="_blank" rel="noreferrer" class="project-link" aria-label="Vedi Lyra 3D Portfolio starter (nuova scheda)">Vedi il lavoro →</a>
+      </article>
+
+      <article class="project reveal reveal-delay-5" data-num="005">
+        <div class="project-header">
+          <h3 class="project-title">AI Content Factory</h3>
+        </div>
+        <p class="project-desc">Pipeline AI-powered che produce 12+ artefatti per run — a costo marginale quasi zero. Questa è la struttura che rende sostenibile il modello ad alto margine di TSW.</p>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin-top:14px;">
+          <span style="font-size:11px; font-weight:700; padding:4px 10px; border:1px solid var(--border); border-radius:999px; color:var(--muted);">NotebookLM</span>
+          <span style="color:var(--accent); font-size:12px; opacity:0.5;">→</span>
+          <span style="font-size:11px; font-weight:700; padding:4px 10px; border:1px solid rgba(0,217,255,0.25); border-radius:999px; color:var(--accent);">Script Lyra</span>
+          <span style="color:var(--accent); font-size:12px; opacity:0.5;">→</span>
+          <span style="font-size:11px; font-weight:700; padding:4px 10px; border:1px solid var(--border); border-radius:999px; color:var(--muted);">ElevenLabs</span>
+          <span style="color:var(--accent); font-size:12px; opacity:0.5;">→</span>
+          <span style="font-size:11px; font-weight:700; padding:4px 10px; border:1px solid var(--border); border-radius:999px; color:var(--muted);">D-ID</span>
+          <span style="color:var(--accent); font-size:12px; opacity:0.5;">→</span>
+          <span style="font-size:11px; font-weight:700; padding:4px 10px; border:1px solid rgba(217,70,239,0.25); border-radius:999px; color:var(--accent3);">Publish</span>
+        </div>
+        <div class="project-result" style="margin-top:12px;">Margine stimato 85–90% — zero team editoriale, zero boilerplate.</div>
+        <a href="mailto:edyta1480@gmail.com" class="project-link">Discutiamo il tuo flusso →</a>
+      </article>
+
+      <article class="project reveal reveal-delay-6" data-num="006">
+        <div class="project-header">
+          <h3 class="project-title">Bali Design 3D</h3>
+          <span class="project-badge live">Deploy</span>
+        </div>
+        <p class="project-desc">Showcase WebXR commerce-ready per arredo d’interni. Configuratore prodotto in-browser senza app store.</p>
+        <div class="project-tags">
+          <span class="tag">Commerce</span><span class="tag">3D</span><span class="tag">WebXR</span>
+        </div>
+        <div class="project-result">Risultato: esperienza prodotto raggiungibile da link diretto.</div>
+        <a href="mailto:edyta1480@gmail.com" class="project-link">Vuoi qualcosa di simile? →</a>
+      </article>
+
+      <article class="project reveal" data-num="007">
+        <div class="project-header">
+          <h3 class="project-title">Hospitality 3D</h3>
+          <span class="project-badge live">Operativo</span>
+        </div>
+        <p class="project-desc">Menu digitale interattivo e distribuzione contenuti per locali — da Bibione a Tridente.</p>
+        <div class="project-tags">
+          <span class="tag">Hospitality</span><span class="tag">Mobile</span><span class="tag">Admin Panel</span>
+        </div>
+        <div class="project-result">Risultato: aggiornamenti contenuti senza tecnici in loco.</div>
+        <a href="mailto:edyta1480@gmail.com" class="project-link">Parliamo del tuo locale →</a>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section id="room-demo" class="room">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label" aria-hidden="true">Esperienze live</div>
+      <h2 class="section-title">Apri una scena.<br>Ora.</h2>
+      <p class="section-desc">Le esperienze TSW girano direttamente nel browser — nessuna app, nessuna installazione.</p>
+    </div>
+
+    <!-- Riga 1: featured + 2 card -->
+    <div class="demo-grid">
+
+      <!-- FEATURED: My Scenes — scena WebXR con video personale -->
+      <a href="https://xr-my-scenes.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card demo-card-featured"
+         aria-label="Apri XR My Scenes — esperienza WebXR live con avatar personale (nuova scheda)">
+        <div class="demo-visual">
+          <canvas id="cv-myscenes" aria-hidden="true"></canvas>
+          <div class="demo-live-dot">LIVE</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">WebXR · Avatar personalizzato · In-browser</div>
+            <div class="demo-title">XR My Scenes</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+      <!-- XR Reset Generator UI — scene builder tool -->
+      <a href="https://xr-reset-generator-ui.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card"
+         aria-label="Apri XR Reset Generator UI — scene builder tool (nuova scheda)">
+        <div class="demo-visual" style="height:180px;">
+          <canvas id="cv-generator" aria-hidden="true"></canvas>
+          <div class="demo-card-badge">Tool · Builder</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">Scene Builder · No-code</div>
+            <div class="demo-title">XR Reset Generator</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+      <!-- XR Reset Landing — corso -->
+      <a href="https://xr-reset-landing.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card"
+         aria-label="Scopri XR Reset — corso in 7 giorni (nuova scheda)">
+        <div class="demo-visual" style="height:180px;">
+          <canvas id="cv-landing" aria-hidden="true"></canvas>
+          <div class="demo-card-badge">Corso · €29</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">7 giorni · Prima scena WebXR</div>
+            <div class="demo-title">XR Reset — Landing</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Riga 2: preview beta -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:14px;">
+
+      <a href="https://tsw-command-center.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card"
+         aria-label="Apri TSW Command Center — dashboard AI (nuova scheda)">
+        <div class="demo-visual" style="height:140px;">
+          <canvas id="cv-command" aria-hidden="true"></canvas>
+          <div class="demo-card-badge">Beta · Dashboard</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">AI · Strategy · Content</div>
+            <div class="demo-title">TSW Command Center</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+      <a href="https://ai-video-factory-navy.vercel.app/" target="_blank" rel="noreferrer"
+         class="demo-card"
+         aria-label="Apri AI Video Factory (nuova scheda)">
+        <div class="demo-visual" style="height:140px;">
+          <canvas id="cv-videofactory" aria-hidden="true"></canvas>
+          <div class="demo-card-badge">Beta · Pipeline</div>
+          <div class="demo-open-icon">↗</div>
+        </div>
+        <div class="demo-info">
+          <div class="demo-info-left">
+            <div class="demo-label">Video · Automation · AI</div>
+            <div class="demo-title">AI Video Factory</div>
+          </div>
+          <div class="demo-arrow">↗</div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<section id="room-2" class="room">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label" aria-hidden="true">Servizi</div>
+      <h2 class="section-title">Come lavoro<br>con te</h2>
+      <p class="section-desc">Progetti custom, esperienze XR e percorsi formativi — prezzo trasparente, scope chiaro, zero workaround.</p>
+    </div>
+    <div class="serv-grid">
+
+      <div class="serv reveal reveal-delay-1">
+        <h3 class="serv-title">WebXR Experience</h3>
+        <p class="serv-desc">Configuratore 3D o esperienza brand in-browser. Pronta per mobile e visibile senza installazioni.</p>
+        <span class="serv-price">€2.800 <em>da</em></span>
+        <a href="mailto:edyta1480@gmail.com" class="serv-cta">Richiedi un preventivo →</a>
+      </div>
+
+      <div class="serv reveal reveal-delay-2">
+        <h3 class="serv-title">Spatial Strategy</h3>
+        <p class="serv-desc">Percorso di adozione XR per brand: dal brief al deploy, con KPI misurabili e training.</p>
+        <span class="serv-price">€1.200 <em>da</em></span>
+        <a href="mailto:edyta1480@gmail.com" class="serv-cta">Parliamo del tuo brand →</a>
+      </div>
+
+      <div class="serv reveal reveal-delay-3">
+        <h3 class="serv-title">Formazione XR Reset</h3>
+        <p class="serv-desc">Corso su misura per team o singoli. Pubblica la tua scena XR in 4 ore.</p>
+        <span class="serv-price">€29</span>
+        <a href="https://thespatialwave.art" target="_blank" rel="noreferrer" class="serv-cta" aria-label="Iscriviti a XR Reset (nuova scheda)">Iscriviti ora →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="room-3" class="room">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label" aria-hidden="true">Dati</div>
+      <h2 class="section-title">Numeri<br>tangibili</h2>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi reveal reveal-delay-1">
+        <span class="kpi-number">4<em>h</em></span>
+        <span class="kpi-label">Da zero a scena WebXR pubblicata — senza codice</span>
+      </div>
+      <div class="kpi reveal reveal-delay-2">
+        <span class="kpi-number">0<em>app</em></span>
+        <span class="kpi-label">Installazioni richieste — tutto gira nel browser</span>
+      </div>
+      <div class="kpi reveal reveal-delay-3">
+        <span class="kpi-number">7<em>+</em></span>
+        <span class="kpi-label">Anni di XR, 3D e AI convergenti in un sistema solo</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="room-4" class="room">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label" aria-hidden="true">About</div>
+      <h2 class="section-title">The Spatial<br>Wave</h2>
+    </div>
+    <div class="reveal reveal-delay-1" style="max-width: 720px;">
+      <p style="color: var(--muted); font-size: clamp(16px, 1.8vw, 20px); line-height: 1.75; margin-bottom: 28px;">
+        TSW è il sistema operativo creativo fondato da Edyta Labedzka — creative technologist con background in XR, character animation professionale e AI automation. Trasforma la complessità tecnologica in esperienze che si attraversano, non si leggono.
+      </p>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px 32px; max-width: 660px;">
+        <div style="font-size:13px; color:var(--muted); padding: 12px 0; border-top: 1px solid var(--border);">
+          <span style="color:var(--ink); font-weight:700; display:block; margin-bottom:8px;">XR & WebXR</span>
+          Meta Horizon Worlds · React Three Fiber · @react-three/xr · Three.js
+          <div class="stack-row">
+            <span class="stack-badge hi">R3F</span><span class="stack-badge hi">WebXR</span><span class="stack-badge">TypeScript</span><span class="stack-badge">Vite</span>
+          </div>
+        </div>
+        <div style="font-size:13px; color:var(--muted); padding: 12px 0; border-top: 1px solid var(--border);">
+          <span style="color:var(--ink); font-weight:700; display:block; margin-bottom:8px;">Character & Animation</span>
+          DAZ Studio G9 · Blender rigging · Rokoko motion capture · Style3D Atelier
+          <div class="stack-row">
+            <span class="stack-badge hi">DAZ G9</span><span class="stack-badge hi">Rokoko</span><span class="stack-badge">Blender</span>
+          </div>
+        </div>
+        <div style="font-size:13px; color:var(--muted); padding: 12px 0; border-top: 1px solid var(--border);">
+          <span style="color:var(--ink); font-weight:700; display:block; margin-bottom:8px;">AI Automation</span>
+          Claude API · Gemini 2.5 Flash · NotebookLM · ElevenLabs · D-ID
+          <div class="stack-row">
+            <span class="stack-badge hi">Claude API</span><span class="stack-badge hi">Gemini 2.5</span><span class="stack-badge">ElevenLabs</span><span class="stack-badge">D-ID</span>
+          </div>
+        </div>
+        <div style="font-size:13px; color:var(--muted); padding: 12px 0; border-top: 1px solid var(--border);">
+          <span style="color:var(--ink); font-weight:700; display:block; margin-bottom:8px;">Stack & Deploy</span>
+          React 19 + Vite + TypeScript · Insforge backend · Vercel · Playwright E2E
+          <div class="stack-row">
+            <span class="stack-badge hi">React 19</span><span class="stack-badge hi">Insforge</span><span class="stack-badge">Vercel</span><span class="stack-badge">Playwright</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="room-5" class="room">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-label" aria-hidden="true">Contatti</div>
+      <h2 class="section-title">Un problema<br>alla volta</h2>
+      <p class="section-desc">Scope chiaro, timeline onesta, zero fix temporanei. Se ha senso lavorarci insieme, lo capiremo in 20 minuti.</p>
+    </div>
+    <div class="cta-card reveal reveal-delay-1">
+      <div class="contact-row">
+        <a href="mailto:edyta1480@gmail.com">edyta1480@gmail.com</a>
+        <a href="https://github.com/edyta14" target="_blank" rel="noreferrer" aria-label="GitHub: edyta14 (apre in nuova scheda)">GitHub: edyta14</a>
+        <a href="https://thespatialwave.art" target="_blank" rel="noreferrer" aria-label="TheSpatialWave.art (apre in nuova scheda)">TheSpatialWave.art</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <span class="brand">The Spatial <span>Wave</span></span>
+    <span class="legal">© 2026 Edyta Labedzka · Piano privato</span>
+  </div>
+</footer>
+
+<script>
+/* ── CANVAS DEMO ANIMATIONS ── */
+
+// Utility: fit canvas to parent
+function fitCanvas(cv) {
+  cv.width  = cv.offsetWidth  || cv.parentElement.offsetWidth;
+  cv.height = cv.offsetHeight || cv.parentElement.offsetHeight;
+}
+
+/* ─────────────────────────────────────────────
+   1. XR MY SCENES — Perspective spatial grid
+   ─────────────────────────────────────────────*/
+(function() {
+  const cv = document.getElementById('cv-myscenes');
+  if (!cv) return;
+  fitCanvas(cv);
+  const ctx = cv.getContext('2d');
+  let t = 0;
+
+  // Particles
+  const particles = Array.from({length: 55}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: 1 + Math.random() * 2,
+    spd: 0.0003 + Math.random() * 0.0005,
+    phase: Math.random() * Math.PI * 2
+  }));
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#05050e');
+    bg.addColorStop(1, '#0a0a18');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Perspective floor grid
+    const vp = { x: W / 2, y: H * 0.45 };
+    const COLS = 12, ROWS = 10;
+    const speed = 0.28;
+    const offset = (t * speed) % (H / ROWS);
+
+    ctx.strokeStyle = 'rgba(0,217,255,0.12)';
+    ctx.lineWidth = 1;
+
+    // Vertical perspective lines
+    for (let c = 0; c <= COLS; c++) {
+      const xNorm = c / COLS;
+      const xBase = xNorm * W;
+      ctx.beginPath();
+      ctx.moveTo(vp.x, vp.y);
+      ctx.lineTo(xBase, H + offset);
+      ctx.stroke();
+    }
+
+    // Horizontal perspective lines
+    for (let r = 0; r <= ROWS; r++) {
+      const yNorm = r / ROWS;
+      const y = vp.y + (H + offset - vp.y) * yNorm;
+      const xLeft  = vp.x - (vp.x - 0)  * yNorm;
+      const xRight = vp.x + (W - vp.x)   * yNorm;
+      const alpha  = yNorm * 0.25;
+      ctx.strokeStyle = `rgba(0,217,255,${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(xLeft, y);
+      ctx.lineTo(xRight, y);
+      ctx.stroke();
+    }
+
+    // Central avatar glow
+    const pulse = 0.7 + 0.3 * Math.sin(t * 0.04);
+    const grd = ctx.createRadialGradient(W/2, H*0.38, 0, W/2, H*0.38, W*0.25);
+    grd.addColorStop(0,   `rgba(0,217,255,${0.22 * pulse})`);
+    grd.addColorStop(0.5, `rgba(124,58,237,${0.12 * pulse})`);
+    grd.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    // Avatar silhouette
+    const ax = W / 2, ay = H * 0.25;
+    const aSize = Math.min(W, H) * 0.18;
+    ctx.save();
+    ctx.globalAlpha = 0.45 + 0.15 * Math.sin(t * 0.03);
+    const avatarGrd = ctx.createLinearGradient(ax, ay - aSize * 1.2, ax, ay + aSize * 2);
+    avatarGrd.addColorStop(0,   'rgba(0,217,255,0.9)');
+    avatarGrd.addColorStop(0.4, 'rgba(124,58,237,0.7)');
+    avatarGrd.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = avatarGrd;
+    // Head
+    ctx.beginPath();
+    ctx.arc(ax, ay - aSize * 0.9, aSize * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    // Body
+    ctx.beginPath();
+    ctx.moveTo(ax - aSize * 0.35, ay - aSize * 0.55);
+    ctx.lineTo(ax + aSize * 0.35, ay - aSize * 0.55);
+    ctx.lineTo(ax + aSize * 0.25, ay + aSize * 1.1);
+    ctx.lineTo(ax - aSize * 0.25, ay + aSize * 1.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Floating particles
+    particles.forEach(p => {
+      p.y -= p.spd;
+      if (p.y < 0) p.y = 1;
+      const px = p.x * W;
+      const py = p.y * H;
+      const alpha = 0.4 + 0.4 * Math.sin(t * 0.02 + p.phase);
+      ctx.beginPath();
+      ctx.arc(px, py, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,217,255,${alpha})`;
+      ctx.fill();
+    });
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  window.addEventListener('resize', () => { fitCanvas(cv); });
+})();
+
+/* ─────────────────────────────────────────────
+   2. XR RESET GENERATOR — Builder UI
+   ─────────────────────────────────────────────*/
+(function() {
+  const cv = document.getElementById('cv-generator');
+  if (!cv) return;
+  fitCanvas(cv);
+  const ctx = cv.getContext('2d');
+  let t = 0;
+
+  const panels = [
+    { x: 0.04, y: 0.08, w: 0.28, h: 0.82, label: 'OBJECTS', color: 'rgba(124,58,237,0.7)' },
+    { x: 0.35, y: 0.08, w: 0.42, h: 0.82, label: 'VIEWPORT', color: 'rgba(0,217,255,0.6)' },
+    { x: 0.80, y: 0.08, w: 0.18, h: 0.82, label: 'PROPS', color: 'rgba(217,70,239,0.6)' },
+  ];
+
+  const listItems = ['Cube_001', 'Lyra_Avatar', 'Floor_Plane', 'Light_Key', 'Camera_Main'];
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // BG
+    ctx.fillStyle = '#080812';
+    ctx.fillRect(0, 0, W, H);
+
+    // Top bar
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(0, 0, W, H * 0.07);
+    ctx.fillStyle = 'rgba(0,217,255,0.6)';
+    ctx.font = `bold ${H * 0.045}px monospace`;
+    ctx.fillText('XR Scene Builder  ●', W * 0.03, H * 0.052);
+
+    // Panels
+    panels.forEach(p => {
+      const x = p.x * W, y = p.y * H, w = p.w * W, h = p.h * H;
+      // Panel bg
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 4);
+      ctx.fill();
+      // Border
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 4);
+      ctx.stroke();
+      // Label
+      ctx.fillStyle = p.color;
+      ctx.font = `bold ${H * 0.042}px monospace`;
+      ctx.fillText(p.label, x + 6, y + H * 0.055);
+    });
+
+    // Object list in left panel
+    const listX = panels[0].x * W + 6;
+    const startY = panels[0].y * H + H * 0.12;
+    const highlight = Math.floor((t / 30) % listItems.length);
+    listItems.forEach((item, i) => {
+      const ly = startY + i * (H * 0.13);
+      const isActive = i === highlight;
+      if (isActive) {
+        ctx.fillStyle = 'rgba(124,58,237,0.3)';
+        ctx.fillRect(listX - 4, ly - H * 0.04, panels[0].w * W - 8, H * 0.10);
+      }
+      ctx.fillStyle = isActive ? 'rgba(0,217,255,1)' : 'rgba(255,255,255,0.45)';
+      ctx.font = `${H * 0.038}px monospace`;
+      ctx.fillText('▸ ' + item, listX, ly);
+    });
+
+    // Viewport: 3D wireframe box
+    const vx = panels[1].x * W + panels[1].w * W * 0.5;
+    const vy = panels[1].y * H + panels[1].h * H * 0.5;
+    const boxSize = Math.min(panels[1].w * W, panels[1].h * H) * 0.28;
+    const angle = t * 0.018;
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+
+    const verts3d = [
+      [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+      [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1]
+    ].map(([x, y, z]) => {
+      // Rotate Y
+      const rx = x * cos - z * sin;
+      const rz = x * sin + z * cos;
+      // Project
+      const scale = boxSize / (3 + rz * 0.5);
+      return [vx + rx * scale, vy + y * scale];
+    });
+
+    const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+    ctx.strokeStyle = 'rgba(0,217,255,0.7)';
+    ctx.lineWidth = 1.5;
+    edges.forEach(([a, b]) => {
+      ctx.beginPath();
+      ctx.moveTo(verts3d[a][0], verts3d[a][1]);
+      ctx.lineTo(verts3d[b][0], verts3d[b][1]);
+      ctx.stroke();
+    });
+
+    // Cursor blinking in props panel
+    const cursorVisible = Math.floor(t / 18) % 2 === 0;
+    if (cursorVisible) {
+      ctx.fillStyle = 'rgba(217,70,239,0.9)';
+      ctx.fillRect(panels[2].x * W + 8, panels[2].y * H + H * 0.18, W * 0.10, H * 0.02);
+    }
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize', () => { fitCanvas(cv); });
+})();
+
+/* ─────────────────────────────────────────────
+   3. XR RESET LANDING — 7-day course progress
+   ─────────────────────────────────────────────*/
+(function() {
+  const cv = document.getElementById('cv-landing');
+  if (!cv) return;
+  fitCanvas(cv);
+  const ctx = cv.getContext('2d');
+  let t = 0;
+  const days = ['Setup','Scene','Oggetti','Luci','Avatar','Mobile','Deploy'];
+
+  function draw() {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.fillStyle = '#06060f';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = 'rgba(0,217,255,0.9)';
+    ctx.font = `bold ${H * 0.1}px -apple-system, sans-serif`;
+    ctx.fillText('XR Reset', W * 0.06, H * 0.18);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = `${H * 0.072}px -apple-system, sans-serif`;
+    ctx.fillText('7 giorni · prima scena WebXR', W * 0.06, H * 0.32);
+
+    // 7 day blocks
+    const blockW = (W - W * 0.12) / 7 - 4;
+    const blockH = H * 0.28;
+    const blockY = H * 0.50;
+    const activeDay = Math.floor((t / 60) % 8);
+
+    days.for
